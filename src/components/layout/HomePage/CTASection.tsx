@@ -1,10 +1,12 @@
+"use client";
+
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { HandHeart } from "lucide-react";
 
 export default function CtaSection() {
   return (
-    <section className="bg-primary relative overflow-hidden">
+    <div className="bg-primary relative overflow-hidden">
       <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(68,64,60,0.2)_50%,transparent_75%,transparent_100%)] bg-[length:20px_20px] opacity-20"></div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative">
         <motion.div
@@ -23,12 +25,11 @@ export default function CtaSection() {
           </p>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button size="lg" variant="secondary" className="gap-2">
-              <HandHeart className="h-5 w-5" />
-              Start Your Journey
+              <HandHeart className="h-5 w-5" /> Start Your Journey
             </Button>
           </motion.div>
         </motion.div>
       </div>
-    </section>
+    </div>
   );
 }
