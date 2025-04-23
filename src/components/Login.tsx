@@ -54,7 +54,7 @@ export default function LoginPage() {
       // You can redirect here or handle successful login
       setTimeout(() => {
         setFormStatus({ type: null, message: "" });
-        // window.location.href = '/dashboard'; // Redirect if needed
+        window.location.href = "/dashboard"; // Redirect if needed
       }, 2000);
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -94,7 +94,7 @@ export default function LoginPage() {
       // You can redirect here or handle successful login
       setTimeout(() => {
         setFormStatus({ type: null, message: "" });
-        window.location.href = '/dashboard';
+        window.location.href = "/donor-dashboard"; // Redirect if needed
       }, 2000);
     } catch (error: unknown) {
       console.error(error);

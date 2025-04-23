@@ -13,7 +13,8 @@ import {
   CheckCircle2,
   MapPin,
 } from "lucide-react";
-
+import MapModal from "./MapModal";
+import { useState } from "react";
 interface SignUpFormProps {
   form: UseFormReturn<FormValues>;
   userType: "donor" | "recipient";
@@ -40,7 +41,6 @@ interface SignUpFormProps {
   passwordStrengthScore: number;
   setShowMap: (show: boolean) => void;
 }
-
 export default function SignUpForm({
   form,
   userType,
@@ -58,6 +58,15 @@ export default function SignUpForm({
   passwordStrengthScore,
   setShowMap,
 }: SignUpFormProps) {
+  // Use the showMap state from props
+  const [showMapLocal, setShowMapLocal] = useState(false);
+
+  // Add the handleAddressSelection function
+  const handleAddressSelection = (selectedAddress: string) => {
+    form.setValue("address", selectedAddress);
+    setShowMapLocal(false);
+  };
+
   return (
     <div className="glass-card w-full shadow-lg rounded-lg overflow-hidden">
       {/* Card header */}
@@ -170,17 +179,19 @@ export default function SignUpForm({
                   type="text"
                   placeholder="Enter your first name"
                   className={`flex h-10 w-full rounded-md border ${
-                    'firstName' in form.formState.errors && form.formState.errors.firstName?.message
+                    "firstName" in form.formState.errors &&
+                    form.formState.errors.firstName?.message
                       ? "border-destructive"
                       : "border-input"
                   } bg-background/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
                   {...form.register("firstName")}
                 />
-                {'firstName' in form.formState.errors && form.formState.errors.firstName?.message && (
-                  <p className="text-sm font-medium text-destructive">
-                    {form.formState.errors.firstName.message}
-                  </p>
-                )}
+                {"firstName" in form.formState.errors &&
+                  form.formState.errors.firstName?.message && (
+                    <p className="text-sm font-medium text-destructive">
+                      {form.formState.errors.firstName.message}
+                    </p>
+                  )}
               </div>
 
               {/* Last Name field */}
@@ -196,17 +207,19 @@ export default function SignUpForm({
                   type="text"
                   placeholder="Enter your last name"
                   className={`flex h-10 w-full rounded-md border ${
-                    'lastName' in form.formState.errors && form.formState.errors.lastName
+                    "lastName" in form.formState.errors &&
+                    form.formState.errors.lastName
                       ? "border-destructive"
                       : "border-input"
                   } bg-background/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
                   {...form.register("lastName")}
                 />
-                {'lastName' in form.formState.errors && form.formState.errors.lastName && (
-                  <p className="text-sm font-medium text-destructive">
-                    {form.formState.errors.lastName?.message}
-                  </p>
-                )}
+                {"lastName" in form.formState.errors &&
+                  form.formState.errors.lastName && (
+                    <p className="text-sm font-medium text-destructive">
+                      {form.formState.errors.lastName?.message}
+                    </p>
+                  )}
               </div>
             </>
           )}
@@ -225,17 +238,19 @@ export default function SignUpForm({
                 type="text"
                 placeholder="Enter organization name"
                 className={`flex h-10 w-full rounded-md border ${
-                  'organizationName' in form.formState.errors && form.formState.errors.organizationName
+                  "organizationName" in form.formState.errors &&
+                  form.formState.errors.organizationName
                     ? "border-destructive"
                     : "border-input"
                 } bg-background/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
                 {...form.register("organizationName")}
               />
-              {'organizationName' in form.formState.errors && form.formState.errors.organizationName && (
-                <p className="text-sm font-medium text-destructive">
-                  {form.formState.errors.organizationName.message}
-                </p>
-              )}
+              {"organizationName" in form.formState.errors &&
+                form.formState.errors.organizationName && (
+                  <p className="text-sm font-medium text-destructive">
+                    {form.formState.errors.organizationName.message}
+                  </p>
+                )}
             </div>
           )}
 
@@ -265,192 +280,183 @@ export default function SignUpForm({
             )}
           </div>
 
-          {/* Password fields for individual donors and recipients */}
-          {((userType === "donor" && donorType === "individual") ||
-            userType === "recipient") && (
-            <>
-              {/* Password field */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="password"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Create a password"
-                    className={`flex h-10 w-full rounded-md border ${
-                      'password' in form.formState.errors && form.formState.errors.password
-                        ? "border-destructive"
-                        : "border-input"
-                    } bg-background/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pr-10`}
-                    {...form.register("password")}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-                {'password' in form.formState.errors && form.formState.errors.password && (
-                  <p className="text-sm font-medium text-destructive">
-                    {form.formState.errors.password.message}
-                  </p>
-                )}
+          {/* Password field */}
+          <div className="space-y-2">
+            <label
+              htmlFor="password"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Password
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Create a password"
+                className={`flex h-10 w-full rounded-md border ${
+                  "password" in form.formState.errors &&
+                  form.formState.errors.password
+                    ? "border-destructive"
+                    : "border-input"
+                } bg-background/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pr-10`}
+                {...form.register("password")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {"password" in form.formState.errors &&
+              form.formState.errors.password && (
+                <p className="text-sm font-medium text-destructive">
+                  {form.formState.errors.password.message}
+                </p>
+              )}
 
-                {/* Password strength indicator */}
-                <div className="mt-2 space-y-2">
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map((segment) => (
-                      <div
-                        key={segment}
-                        className={`h-1.5 flex-1 rounded-full ${
-                          passwordStrengthScore >= segment
-                            ? passwordStrengthScore === 1
-                              ? "bg-destructive"
-                              : passwordStrengthScore === 2
-                              ? "bg-orange-500"
-                              : passwordStrengthScore === 3
-                              ? "bg-yellow-500"
-                              : passwordStrengthScore === 4
-                              ? "bg-green-400"
-                              : "bg-green-500"
-                            : "bg-muted"
-                        }`}
-                      ></div>
-                    ))}
-                  </div>
-
-                  <ul className="text-xs space-y-1 mt-1">
-                    <li className="flex items-center gap-1">
-                      <span
-                        className={
-                          passwordStrength.length
-                            ? "text-green-500"
-                            : "text-muted-foreground"
-                        }
-                      >
-                        {passwordStrength.length ? (
-                          <CheckCircle2 className="h-3 w-3 inline" />
-                        ) : (
-                          "○"
-                        )}
-                      </span>
-                      <span>At least 8 characters</span>
-                    </li>
-                    <li className="flex items-center gap-1">
-                      <span
-                        className={
-                          passwordStrength.uppercase
-                            ? "text-green-500"
-                            : "text-muted-foreground"
-                        }
-                      >
-                        {passwordStrength.uppercase ? (
-                          <CheckCircle2 className="h-3 w-3 inline" />
-                        ) : (
-                          "○"
-                        )}
-                      </span>
-                      <span>At least one uppercase letter</span>
-                    </li>
-                    <li className="flex items-center gap-1">
-                      <span
-                        className={
-                          passwordStrength.lowercase
-                            ? "text-green-500"
-                            : "text-muted-foreground"
-                        }
-                      >
-                        {passwordStrength.lowercase ? (
-                          <CheckCircle2 className="h-3 w-3 inline" />
-                        ) : (
-                          "○"
-                        )}
-                      </span>
-                      <span>At least one lowercase letter</span>
-                    </li>
-                    <li className="flex items-center gap-1">
-                      <span
-                        className={
-                          passwordStrength.number
-                            ? "text-green-500"
-                            : "text-muted-foreground"
-                        }
-                      >
-                        {passwordStrength.number ? (
-                          <CheckCircle2 className="h-3 w-3 inline" />
-                        ) : (
-                          "○"
-                        )}
-                      </span>
-                      <span>At least one number</span>
-                    </li>
-                    <li className="flex items-center gap-1">
-                      <span
-                        className={
-                          passwordStrength.special
-                            ? "text-green-500"
-                            : "text-muted-foreground"
-                        }
-                      >
-                      </span>
-                    </li>
-                  </ul>
-                </div>
+            {/* Password strength indicator */}
+            <div className="mt-2 space-y-2">
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((segment) => (
+                  <div
+                    key={segment}
+                    className={`h-1.5 flex-1 rounded-full ${
+                      passwordStrengthScore >= segment
+                        ? passwordStrengthScore === 1
+                          ? "bg-destructive"
+                          : passwordStrengthScore === 2
+                          ? "bg-orange-500"
+                          : passwordStrengthScore === 3
+                          ? "bg-yellow-500"
+                          : passwordStrengthScore === 4
+                          ? "bg-green-400"
+                          : "bg-green-500"
+                        : "bg-muted"
+                    }`}
+                  ></div>
+                ))}
               </div>
 
-              {/* Confirm Password field */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="confirmPassword"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm your password"
-                    className={`flex h-10 w-full rounded-md border ${
-                      'confirmPassword' in form.formState.errors && form.formState.errors.confirmPassword
-                        ? "border-destructive"
-                        : "border-input"
-                    } bg-background/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pr-10`}
-                    {...form.register("confirmPassword")}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    aria-label={
-                      showConfirmPassword ? "Hide password" : "Show password"
+              <ul className="text-xs space-y-1 mt-1">
+                <li className="flex items-center gap-1">
+                  <span
+                    className={
+                      passwordStrength.length
+                        ? "text-green-500"
+                        : "text-muted-foreground"
                     }
                   >
-                    {showConfirmPassword ? (
-                      <EyeOff size={16} />
+                    {passwordStrength.length ? (
+                      <CheckCircle2 className="h-3 w-3 inline" />
                     ) : (
-                      <Eye size={16} />
+                      "○"
                     )}
-                  </button>
-                </div>
-                {'confirmPassword' in form.formState.errors && form.formState.errors.confirmPassword && (
-                  <p className="text-sm font-medium text-destructive">
-                    {form.formState.errors.confirmPassword.message}
-                  </p>
-                )}
-              </div>
-            </>
-          )}
+                  </span>
+                  <span>At least 8 characters</span>
+                </li>
+                <li className="flex items-center gap-1">
+                  <span
+                    className={
+                      passwordStrength.uppercase
+                        ? "text-green-500"
+                        : "text-muted-foreground"
+                    }
+                  >
+                    {passwordStrength.uppercase ? (
+                      <CheckCircle2 className="h-3 w-3 inline" />
+                    ) : (
+                      "○"
+                    )}
+                  </span>
+                  <span>At least one uppercase letter</span>
+                </li>
+                <li className="flex items-center gap-1">
+                  <span
+                    className={
+                      passwordStrength.lowercase
+                        ? "text-green-500"
+                        : "text-muted-foreground"
+                    }
+                  >
+                    {passwordStrength.lowercase ? (
+                      <CheckCircle2 className="h-3 w-3 inline" />
+                    ) : (
+                      "○"
+                    )}
+                  </span>
+                  <span>At least one lowercase letter</span>
+                </li>
+                <li className="flex items-center gap-1">
+                  <span
+                    className={
+                      passwordStrength.number
+                        ? "text-green-500"
+                        : "text-muted-foreground"
+                    }
+                  >
+                    {passwordStrength.number ? (
+                      <CheckCircle2 className="h-3 w-3 inline" />
+                    ) : (
+                      "○"
+                    )}
+                  </span>
+                  <span>At least one number</span>
+                </li>
+                <li className="flex items-center gap-1">
+                  <span
+                    className={
+                      passwordStrength.special
+                        ? "text-green-500"
+                        : "text-muted-foreground"
+                    }
+                  ></span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Confirm Password field */}
+          <div className="space-y-2">
+            <label
+              htmlFor="confirmPassword"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Confirm Password
+            </label>
+            <div className="relative">
+              <input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm your password"
+                className={`flex h-10 w-full rounded-md border ${
+                  "confirmPassword" in form.formState.errors &&
+                  form.formState.errors.confirmPassword
+                    ? "border-destructive"
+                    : "border-input"
+                } bg-background/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pr-10`}
+                {...form.register("confirmPassword")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={
+                  showConfirmPassword ? "Hide password" : "Show password"
+                }
+              >
+                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {"confirmPassword" in form.formState.errors &&
+              form.formState.errors.confirmPassword && (
+                <p className="text-sm font-medium text-destructive">
+                  {form.formState.errors.confirmPassword.message}
+                </p>
+              )}
+          </div>
 
           {/* Phone field - required for organization, optional for others */}
           <div className="space-y-2">
@@ -507,7 +513,7 @@ export default function SignUpForm({
               {userType === "donor" && donorType === "organization" && (
                 <button
                   type="button"
-                  onClick={() => setShowMap(true)}
+                  onClick={() => setShowMapLocal(true)}
                   className="flex items-center justify-center h-10 px-3 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                   aria-label="Select location on map"
                 >
@@ -519,6 +525,13 @@ export default function SignUpForm({
               <p className="text-sm font-medium text-destructive">
                 {form.formState.errors.address.message}
               </p>
+            )}
+            {showMapLocal && (
+              <MapModal
+                onClose={() => setShowMapLocal(false)}
+                onSelectAddress={handleAddressSelection}
+                initialAddress={form.getValues("address")}
+              />
             )}
           </div>
 
@@ -535,17 +548,19 @@ export default function SignUpForm({
                 id="description"
                 placeholder="Describe your organization"
                 className={`flex min-h-[80px] w-full rounded-md border ${
-                  'description' in form.formState.errors && form.formState.errors.description
+                  "description" in form.formState.errors &&
+                  form.formState.errors.description
                     ? "border-destructive"
                     : "border-input"
                 } bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
                 {...form.register("description")}
               />
-              {'description' in form.formState.errors && form.formState.errors.description && (
-                <p className="text-sm font-medium text-destructive">
-                  {form.formState.errors.description.message}
-                </p>
-              )}
+              {"description" in form.formState.errors &&
+                form.formState.errors.description && (
+                  <p className="text-sm font-medium text-destructive">
+                    {form.formState.errors.description.message}
+                  </p>
+                )}
             </div>
           )}
 
