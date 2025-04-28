@@ -4,7 +4,6 @@ import type { UseFormReturn } from "react-hook-form";
 import type { FormValues } from "../../Signup";
 import InfoSection from "./InfoSection";
 import SignUpForm from "./SignupForm";
-import MapModal from "./MapModal";
 
 interface SignUpPageUIProps {
   form: UseFormReturn<FormValues>;
@@ -50,9 +49,7 @@ export default function SignUpPageUI({
   onSubmit,
   passwordStrength,
   passwordStrengthScore,
-  showMap,
   setShowMap,
-  handleMapSelection,
 }: SignUpPageUIProps) {
   return (
     <div className="min-h-screen auth-background floating-shapes flex items-center justify-center p-4 md:p-8">
@@ -91,14 +88,6 @@ export default function SignUpPageUI({
           <div className="absolute -bottom-6 -left-6 w-12 h-12 rounded-full bg-secondary/20 animate-float-slow delay-700"></div>
         </div>
       </div>
-
-      {/* Map Modal */}
-      {showMap && (
-        <MapModal
-          onClose={() => setShowMap(false)}
-          onSelectAddress={handleMapSelection}
-        />
-      )}
     </div>
   );
 }

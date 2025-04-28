@@ -2,7 +2,6 @@
 
 import type { UseFormReturn } from "react-hook-form";
 import type { FormValues } from "../../Login";
-import type { AuthProvider } from "firebase/auth";
 import { LogIn } from "lucide-react";
 import InfoSection from "./InfoSection";
 import LoginForm from "./LoginForm";
@@ -12,7 +11,6 @@ interface LoginPageUIProps {
   userType: "donor" | "recipient";
   setUserType: (type: "donor" | "recipient") => void;
   loading: boolean;
-  socialLoading: string | null;
   showPassword: boolean;
   setShowPassword: (show: boolean) => void;
   formStatus: {
@@ -20,11 +18,6 @@ interface LoginPageUIProps {
     message: string;
   };
   onSubmit: (values: FormValues) => Promise<void>;
-  handleSocialSignIn: (
-    provider: AuthProvider,
-    providerName: string
-  ) => Promise<void>;
-  googleProvider: AuthProvider;
 }
 
 export default function LoginPageUI({
@@ -32,13 +25,10 @@ export default function LoginPageUI({
   userType,
   setUserType,
   loading,
-  socialLoading,
   showPassword,
   setShowPassword,
   formStatus,
   onSubmit,
-  handleSocialSignIn,
-  googleProvider,
 }: LoginPageUIProps) {
   return (
     <div className="min-h-screen auth-background floating-shapes flex items-center justify-center p-4 md:p-8">
@@ -102,9 +92,6 @@ export default function LoginPageUI({
               showPassword={showPassword}
               setShowPassword={setShowPassword}
               loading={loading}
-              socialLoading={socialLoading}
-              handleSocialSignIn={handleSocialSignIn}
-              googleProvider={googleProvider}
             />
           </div>
 
