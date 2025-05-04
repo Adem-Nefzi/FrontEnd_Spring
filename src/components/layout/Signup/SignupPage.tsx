@@ -20,7 +20,7 @@ interface SignUpPageUIProps {
     type: "success" | "error" | null;
     message: string;
   };
-  onSubmit: (values: FormValues) => void;
+  onSubmit: (values: FormValues) => Promise<void>; // Changed to async
   passwordStrength: {
     length: boolean;
     uppercase: boolean;
@@ -49,7 +49,9 @@ export default function SignUpPageUI({
   onSubmit,
   passwordStrength,
   passwordStrengthScore,
+  showMap,
   setShowMap,
+  handleMapSelection,
 }: SignUpPageUIProps) {
   return (
     <div className="min-h-screen auth-background floating-shapes flex items-center justify-center p-4 md:p-8">
@@ -61,7 +63,7 @@ export default function SignUpPageUI({
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-32 h-32 bg-accent/10 rounded-full blur-xl opacity-50 animate-float-slow"></div>
 
         {/* Left side - Info */}
-        <InfoSection userType={userType} />
+        <InfoSection userType={userType} donorType={donorType} />
 
         {/* Right side - Form */}
         <div className="relative z-10 order-1 md:order-2">
@@ -80,7 +82,9 @@ export default function SignUpPageUI({
             onSubmit={onSubmit}
             passwordStrength={passwordStrength}
             passwordStrengthScore={passwordStrengthScore}
+            showMap={showMap}
             setShowMap={setShowMap}
+            handleMapSelection={handleMapSelection}
           />
 
           {/* Floating elements */}

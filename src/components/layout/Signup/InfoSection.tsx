@@ -2,6 +2,7 @@ import { Heart, Users, Shield, Gift, Award } from "lucide-react";
 
 interface InfoSectionProps {
   userType: "donor" | "recipient";
+  donorType: "individual" | "organization";
 }
 
 export default function InfoSection({ userType }: InfoSectionProps) {

@@ -12,6 +12,7 @@ import {
   ArrowRight,
   CheckCircle2,
 } from "lucide-react";
+
 interface SignUpFormProps {
   form: UseFormReturn<FormValues>;
   userType: "donor" | "recipient";
@@ -27,7 +28,7 @@ interface SignUpFormProps {
     type: "success" | "error" | null;
     message: string;
   };
-  onSubmit: (values: FormValues) => void;
+  onSubmit: (values: FormValues) => Promise<void>; // Changed to async
   passwordStrength: {
     length: boolean;
     uppercase: boolean;
@@ -36,8 +37,11 @@ interface SignUpFormProps {
     special: boolean;
   };
   passwordStrengthScore: number;
+  showMap: boolean;
   setShowMap: (show: boolean) => void;
+  handleMapSelection: (address: string) => void;
 }
+
 export default function SignUpForm({
   form,
   userType,
@@ -54,9 +58,6 @@ export default function SignUpForm({
   passwordStrength,
   passwordStrengthScore,
 }: SignUpFormProps) {
-  // Use the showMap state from props
-
-  // Add the handleAddressSelection function
   return (
     <div className="glass-card w-full shadow-lg rounded-lg overflow-hidden">
       {/* Card header */}
@@ -163,23 +164,16 @@ export default function SignUpForm({
                   id="firstName"
                   {...form.register("firstName")}
                   className={`flex h-10 w-full rounded-md border ${
-                    "firstName" in form.formState.errors ||
-                    (formStatus.type === "error" &&
-                      /first[_\s]?name/i.test(formStatus.message))
+                    "firstName" in form.formState.errors
                       ? "border-destructive"
                       : "border-input"
                   } bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
                 />
-                {"firstName" in form.formState.errors ? (
+                {"firstName" in form.formState.errors && (
                   <p className="text-sm font-medium text-destructive">
                     {form.formState.errors.firstName?.message}
                   </p>
-                ) : formStatus.type === "error" &&
-                  /first[_\s]?name/i.test(formStatus.message) ? (
-                  <p className="text-sm font-medium text-destructive">
-                    {formStatus.message}
-                  </p>
-                ) : null}
+                )}
               </div>
 
               {/* Last Name field */}
@@ -189,23 +183,16 @@ export default function SignUpForm({
                   id="lastName"
                   {...form.register("lastName")}
                   className={`flex h-10 w-full rounded-md border ${
-                    "lastName" in form.formState.errors ||
-                    (formStatus.type === "error" &&
-                      /last[_\s]?name/i.test(formStatus.message))
+                    "lastName" in form.formState.errors
                       ? "border-destructive"
                       : "border-input"
                   } bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
                 />
-                {"lastName" in form.formState.errors ? (
+                {"lastName" in form.formState.errors && (
                   <p className="text-sm font-medium text-destructive">
                     {form.formState.errors.lastName?.message}
                   </p>
-                ) : formStatus.type === "error" &&
-                  /last[_\s]?name/i.test(formStatus.message) ? (
-                  <p className="text-sm font-medium text-destructive">
-                    {formStatus.message}
-                  </p>
-                ) : null}
+                )}
               </div>
             </>
           )}
@@ -218,23 +205,16 @@ export default function SignUpForm({
                 id="organizationName"
                 {...form.register("organizationName")}
                 className={`flex h-10 w-full rounded-md border ${
-                  "organizationName" in form.formState.errors ||
-                  (formStatus.type === "error" &&
-                    /organization|name/i.test(formStatus.message))
+                  "organizationName" in form.formState.errors
                     ? "border-destructive"
                     : "border-input"
                 } bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
               />
-              {"organizationName" in form.formState.errors ? (
+              {"organizationName" in form.formState.errors && (
                 <p className="text-sm font-medium text-destructive">
                   {form.formState.errors.organizationName?.message}
                 </p>
-              ) : formStatus.type === "error" &&
-                /organization|name/i.test(formStatus.message) ? (
-                <p className="text-sm font-medium text-destructive">
-                  {formStatus.message}
-                </p>
-              ) : null}
+              )}
             </div>
           )}
 
@@ -246,27 +226,19 @@ export default function SignUpForm({
               type="email"
               {...form.register("email")}
               className={`flex h-10 w-full rounded-md border ${
-                form.formState.errors.email ||
-                (formStatus.type === "error" &&
-                  /email/i.test(formStatus.message))
+                form.formState.errors.email
                   ? "border-destructive"
                   : "border-input"
               } bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
             />
-            {form.formState.errors.email ? (
+            {form.formState.errors.email && (
               <p className="text-sm font-medium text-destructive">
                 {form.formState.errors.email.message}
               </p>
-            ) : formStatus.type === "error" &&
-              /email/i.test(formStatus.message) ? (
-              <p className="text-sm font-medium text-destructive">
-                {formStatus.message}
-              </p>
-            ) : null}
+            )}
           </div>
 
-          {/* Password field */}
-          {/* Password Field with Strength Indicator */}
+          {/* Password field with strength indicator */}
           <div className="space-y-2">
             <label htmlFor="password">Password</label>
             <div className="relative">
@@ -275,9 +247,7 @@ export default function SignUpForm({
                 type={showPassword ? "text" : "password"}
                 {...form.register("password")}
                 className={`flex h-10 w-full rounded-md border ${
-                  form.formState.errors.password ||
-                  (formStatus.type === "error" &&
-                    /password/i.test(formStatus.message))
+                  form.formState.errors.password
                     ? "border-destructive"
                     : "border-input"
                 } bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 pr-10`}
@@ -290,20 +260,13 @@ export default function SignUpForm({
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-
-            {/* Error Messages */}
-            {form.formState.errors.password ? (
+            {form.formState.errors.password && (
               <p className="text-sm font-medium text-destructive">
                 {form.formState.errors.password.message}
               </p>
-            ) : formStatus.type === "error" &&
-              /password/i.test(formStatus.message) ? (
-              <p className="text-sm font-medium text-destructive">
-                {formStatus.message}
-              </p>
-            ) : null}
+            )}
 
-            {/* Password Strength Indicator (Keep this part!) */}
+            {/* Password Strength Indicator */}
             <div className="mt-2 space-y-2">
               <div className="flex gap-1">
                 {[1, 2, 3, 4, 5].map((segment) => (
@@ -404,9 +367,7 @@ export default function SignUpForm({
                 type={showConfirmPassword ? "text" : "password"}
                 {...form.register("confirmPassword")}
                 className={`flex h-10 w-full rounded-md border ${
-                  form.formState.errors.confirmPassword ||
-                  (formStatus.type === "error" &&
-                    /confirm|password/i.test(formStatus.message))
+                  form.formState.errors.confirmPassword
                     ? "border-destructive"
                     : "border-input"
                 } bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 pr-10`}
@@ -414,103 +375,83 @@ export default function SignUpForm({
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-            {form.formState.errors.confirmPassword ? (
+            {form.formState.errors.confirmPassword && (
               <p className="text-sm font-medium text-destructive">
                 {form.formState.errors.confirmPassword.message}
               </p>
-            ) : formStatus.type === "error" &&
-              /confirm|password/i.test(formStatus.message) ? (
-              <p className="text-sm font-medium text-destructive">
-                {formStatus.message}
-              </p>
-            ) : null}
+            )}
           </div>
 
-          {/* Phone field - required for organization, optional for others */}
+          {/* Phone field */}
           <div className="space-y-2">
-            <label htmlFor="phone">Phone Number</label>
+            <label htmlFor="phone">
+              Phone Number{" "}
+              {donorType === "organization" ? "(Required)" : "(Optional)"}
+            </label>
             <input
               id="phone"
               type="tel"
               {...form.register("phone")}
               className={`flex h-10 w-full rounded-md border ${
-                form.formState.errors.phone ||
-                (formStatus.type === "error" &&
-                  /phone/i.test(formStatus.message))
+                form.formState.errors.phone
                   ? "border-destructive"
                   : "border-input"
               } bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
             />
-            {form.formState.errors.phone ? (
+            {form.formState.errors.phone && (
               <p className="text-sm font-medium text-destructive">
                 {form.formState.errors.phone.message}
               </p>
-            ) : formStatus.type === "error" &&
-              /phone/i.test(formStatus.message) ? (
-              <p className="text-sm font-medium text-destructive">
-                {formStatus.message}
-              </p>
-            ) : null}
+            )}
           </div>
 
-          {/* Address field - required for organization, optional for others */}
+          {/* Address field */}
           <div className="space-y-2">
-            <label htmlFor="address">Address</label>
+            <label htmlFor="address">
+              Address{" "}
+              {donorType === "organization" ? "(Required)" : "(Optional)"}
+            </label>
             <div className="flex gap-2">
               <input
                 id="address"
                 {...form.register("address")}
                 className={`flex h-10 w-full rounded-md border ${
-                  form.formState.errors.address ||
-                  (formStatus.type === "error" &&
-                    /address/i.test(formStatus.message))
+                  form.formState.errors.address
                     ? "border-destructive"
                     : "border-input"
                 } bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
               />
             </div>
-            {form.formState.errors.address ? (
+            {form.formState.errors.address && (
               <p className="text-sm font-medium text-destructive">
                 {form.formState.errors.address.message}
               </p>
-            ) : formStatus.type === "error" &&
-              /address/i.test(formStatus.message) ? (
-              <p className="text-sm font-medium text-destructive">
-                {formStatus.message}
-              </p>
-            ) : null}
+            )}
           </div>
 
           {/* Description field - only for organization donors */}
           {userType === "donor" && donorType === "organization" && (
             <div className="space-y-2">
-              <label htmlFor="description">Description</label>
+              <label htmlFor="description">Description (Optional)</label>
               <textarea
                 id="description"
                 {...form.register("description")}
                 className={`flex min-h-[80px] w-full rounded-md border ${
-                  "description" in form.formState.errors ||
-                  (formStatus.type === "error" &&
-                    /description/i.test(formStatus.message))
+                  "description" in form.formState.errors
                     ? "border-destructive"
                     : "border-input"
                 } bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
               />
-              {"description" in form.formState.errors ? (
+              {"description" in form.formState.errors && (
                 <p className="text-sm font-medium text-destructive">
                   {form.formState.errors.description?.message}
                 </p>
-              ) : formStatus.type === "error" &&
-                /description/i.test(formStatus.message) ? (
-                <p className="text-sm font-medium text-destructive">
-                  {formStatus.message}
-                </p>
-              ) : null}
+              )}
             </div>
           )}
 
@@ -524,7 +465,7 @@ export default function SignUpForm({
             />
             <div className="space-y-1 leading-none">
               <label htmlFor="termsAccepted" className="text-sm font-medium">
-                I agree to the terms
+                I agree to the terms and conditions
               </label>
               {form.formState.errors.termsAccepted && (
                 <p className="text-sm font-medium text-destructive">
@@ -543,7 +484,7 @@ export default function SignUpForm({
             {loading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <UserPlus className="mr-2 h-4 w-4 group-hover:animate-pulse" />
+              <UserPlus className="mr-2 h-4 w-4" />
             )}
             {loading ? "Creating account..." : "Create Account"}
           </button>

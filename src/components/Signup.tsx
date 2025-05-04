@@ -4,16 +4,8 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import axios from "axios";
+import { AuthService } from "@/api/auth";
 import SignUpPageUI from "@/components/layout/Signup/SignupPage";
-
-// API client configuration
-const api = axios.create({
-  baseURL: "http://localhost:8000/api",
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
 
 // Form schema creator
 const createFormSchema = (
@@ -155,70 +147,92 @@ export default function SignUpPage() {
     setFormStatus({ type: null, message: "" });
 
     try {
-      let endpoint: string;
-      let payload: Record<string, string | null | undefined>;
-
       if (userType === "donor" && donorType === "individual") {
-        endpoint = "/register";
-        payload = {
-          first_name: "firstName" in values ? values.firstName : "",
-          last_name: "lastName" in values ? values.lastName : "",
-          email: values.email,
-          password: values.password,
-          password_confirmation: values.confirmPassword,
-          phone: values.phone || null,
-          address: values.address || null,
-          user_type: "donor",
+        // Type assertion for individual donor
+        const individualValues = values as {
+          firstName: string;
+          lastName: string;
+          email: string;
+          password: string;
+          phone?: string;
+          address?: string;
         };
+
+        await AuthService.registerUser({
+          firstName: individualValues.firstName,
+          lastName: individualValues.lastName,
+          email: individualValues.email,
+          password: individualValues.password,
+          userType: "DONOR",
+        });
       } else if (userType === "donor" && donorType === "organization") {
-        endpoint = "/association/register";
-        payload = {
-          name: "organizationName" in values ? values.organizationName : "",
-          email: values.email,
-          password: values.password,
-          phone: values.phone,
-          address: values.address,
-          description:
-            "description" in values ? values.description || null : null,
+        const orgValues = values as {
+          organizationName: string;
+          email: string;
+          password: string;
+          phone: string;
+          address: string;
+          description?: string;
         };
+
+        await AuthService.registerAssociation({
+          firstName: "Organization", // Default value for organization
+          lastName: "Admin", // Default value for organization
+          email: orgValues.email,
+          password: orgValues.password,
+          userType: "DONOR",
+          associationName: orgValues.organizationName,
+          associationEmail: orgValues.email,
+          associationPhone: orgValues.phone,
+          associationAddress: orgValues.address,
+          description: orgValues.description,
+          category: "OTHER",
+          logoUrl: "", // Add empty string if not provided
+        });
       } else {
-        endpoint = "/register";
-        payload = {
-          first_name: "firstName" in values ? values.firstName : "",
-          last_name: "lastName" in values ? values.lastName : "",
-          email: values.email,
-          password: values.password,
-          phone: values.phone || null,
-          address: values.address || null,
-          user_type: "recipient",
+        const recipientValues = values as {
+          firstName: string;
+          lastName: string;
+          email: string;
+          password: string;
+          phone?: string;
+          address?: string;
         };
+
+        await AuthService.registerUser({
+          firstName: recipientValues.firstName,
+          lastName: recipientValues.lastName,
+          email: recipientValues.email,
+          password: recipientValues.password,
+          userType: "RECIPIENT",
+        });
       }
-
-      await api.post(endpoint, payload);
-
       setFormStatus({
         type: "success",
         message: "Account created! Redirecting to login...",
       });
       setTimeout(() => (window.location.href = "/login"), 2000);
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 422) {
-          const errors = error.response.data.errors;
-          const firstError = Object.values(errors)[0] as string[];
-          setFormStatus({ type: "error", message: firstError[0] });
-        } else {
-          setFormStatus({
-            type: "error",
-            message: error.response?.data?.message || "Registration failed",
-          });
-        }
-      } else {
-        setFormStatus({
-          type: "error",
-          message: "An unexpected error occurred",
-        });
-      }
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : typeof error === "object" &&
+            error !== null &&
+            "response" in error &&
+            error.response &&
+            typeof error.response === "object" &&
+            "data" in error.response &&
+            error.response.data &&
+            typeof error.response.data === "object" &&
+            "message" in error.response.data &&
+            typeof error.response.data.message === "string"
+          ? error.response.data.message
+          : "Registration failed. Please try again.";
+
+      setFormStatus({
+        type: "error",
+        message: errorMessage,
+      });
     } finally {
       setLoading(false);
     }
