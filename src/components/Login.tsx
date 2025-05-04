@@ -4,10 +4,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { login, associationLogin, logout } from "@/api/auth"; // You'll need to add associationLogin to your auth service
+import { AuthService } from "@/api/auth";
 import LoginPageUI from "@/components/layout/Login/LoginPage";
 
-// Form schema remains the same
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email"),
   password: z.string().min(1, "Password is required"),
@@ -39,20 +38,19 @@ export default function LoginPage() {
     setFormStatus({ type: null, message: "" });
 
     try {
-      let response;
       let redirectPath = "/dashboard";
 
       if (userType === "donor") {
-        // First try regular user login
+        // First try donor login
         try {
-          response = await login({
-            email: values.email,
-            password: values.password,
-          });
+          const { user } = await AuthService.login(
+            values.email,
+            values.password
+          );
 
           // Verify the user is actually a donor
-          if (response.user?.user_type !== "donor") {
-            await logout(); // Clear any partial auth
+          if (user.userType !== "DONOR") {
+            await AuthService.logout();
             throw new Error(
               "Please use recipient login for recipient accounts"
             );
@@ -60,31 +58,41 @@ export default function LoginPage() {
 
           redirectPath = "/donor-dashboard";
         } catch (userError) {
-          // If user login fails, try association login
+          // If donor login fails, try as association
           try {
-            await associationLogin({
-              email: values.email,
-              password: values.password,
-            });
+            const { user, association } = await AuthService.login(
+              values.email,
+              values.password
+            );
+
+            // Verify it's actually an association
+            if (user.userType !== "RECIPIENT" || !association) {
+              await AuthService.logout();
+              throw new Error("Invalid account type");
+            }
+
             redirectPath = "/association-dashboard";
           } catch {
-            throw userError; // Throw original user error
+            throw userError; // Throw original error
           }
         }
       } else {
-        // Recipient login
-        response = await login({
-          email: values.email,
-          password: values.password,
-        });
+        // Recipient login flow
+        const { user, association } = await AuthService.login(
+          values.email,
+          values.password
+        );
 
         // Verify the user is actually a recipient
-        if (response.user?.user_type !== "recipient") {
-          await logout();
+        if (user.userType !== "RECIPIENT") {
+          await AuthService.logout();
           throw new Error("Please use donor login for donor accounts");
         }
 
-        redirectPath = "/recipient-dashboard";
+        // Determine if this is a regular recipient or association
+        redirectPath = association
+          ? "/association-dashboard"
+          : "/recipient-dashboard";
       }
 
       setFormStatus({

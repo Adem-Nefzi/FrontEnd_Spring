@@ -17,350 +17,444 @@ import DonationsList from "./DonationsList";
 import ApplicantsList from "./ApplicantsList";
 import ChatSection from "./ChatSection";
 import NotificationsPanel from "../Donor Dashboard/NotificationsPanel";
-import { useMobile } from "@/hooks/use-mobile";
 import NeedsList from "./NeedsList";
 import AssociationProfile from "./AssociationProfile";
 
 export default function AssociationDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [showNotifications, setShowNotifications] = useState(false);
-  const isMobile = useMobile();
   const [theme, setTheme] = useState("light");
 
   // Initialize theme from localStorage or system preference
   useEffect(() => {
-    // Check localStorage first
     const savedTheme = localStorage.getItem("theme");
-
-    // If there's a saved theme, use it
-    // Otherwise, check system preference
     const prefersDark =
       savedTheme === "dark" ||
       (!savedTheme &&
         window.matchMedia("(prefers-color-scheme: dark)").matches);
 
-    // Set the theme state
     setTheme(prefersDark ? "dark" : "light");
-
-    // Apply theme to document
     document.documentElement.classList.toggle("dark", prefersDark);
   }, []);
 
-  // Toggle theme function
   const toggleTheme = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
     setTheme(newTheme);
-
-    // Save to localStorage
     localStorage.setItem("theme", newTheme);
-
-    // Apply to document
     document.documentElement.classList.toggle("dark", newTheme === "dark");
   };
 
   return (
     <div
-      className={`p-4 md:p-6 ${
+      className={`min-h-screen p-4 md:p-8 transition-colors duration-300 ${
         theme === "dark"
-          ? "bg-slate-900"
+          ? "bg-gradient-to-br from-slate-900 to-slate-800"
           : "bg-gradient-to-br from-blue-50 to-indigo-50"
       }`}
     >
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-            Association Dashboard
-          </h1>
-          <p className="text-muted-foreground">
-            Manage donations and help those in need
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            className="rounded-full"
-            aria-label="Toggle theme"
-          >
-            {theme === "dark" ? (
-              <Sun className="h-5 w-5" />
-            ) : (
-              <Moon className="h-5 w-5" />
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative rounded-full"
-            onClick={() => setShowNotifications(!showNotifications)}
-          >
-            <Bell className="h-5 w-5" />
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500">
-              5
-            </Badge>
-          </Button>
-          <div className="hidden sm:flex items-center gap-3">
-            <Avatar className="border-2 border-primary">
-              <AvatarImage
-                src="/placeholder.svg?height=40&width=40"
-                alt="Association"
-              />
-              <AvatarFallback className="bg-gradient-to-br from-indigo-400 to-purple-500 text-white">
-                HH
-              </AvatarFallback>
-            </Avatar>
+      <div className="max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+          <div className="space-y-1">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+              Association Dashboard
+            </h1>
+            <p className="text-muted-foreground text-sm md:text-base">
+              Manage donations and help those in need
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="rounded-full hover:bg-opacity-20 hover:bg-indigo-500 transition-all"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative rounded-full hover:bg-opacity-20 hover:bg-indigo-500 transition-all"
+              onClick={() => setShowNotifications(!showNotifications)}
+            >
+              <Bell className="h-5 w-5" />
+              <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 animate-pulse">
+                5
+              </Badge>
+            </Button>
+            <div className="hidden sm:flex items-center gap-3">
+              <Avatar className="border-2 border-primary hover:scale-105 transition-transform">
+                <AvatarImage
+                  src="/placeholder.svg?height=40&width=40"
+                  alt="Association"
+                />
+                <AvatarFallback className="bg-gradient-to-br from-indigo-400 to-purple-500 text-white">
+                  HH
+                </AvatarFallback>
+              </Avatar>
+            </div>
           </div>
         </div>
-      </div>
 
-      {showNotifications && (
-        <Card
-          className={`mb-6 border shadow-lg ${
-            theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"
-          }`}
+        {/* Notifications Panel */}
+        {showNotifications && (
+          <Card
+            className={`mb-8 border shadow-lg animate-fade-in ${
+              theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"
+            }`}
+          >
+            <CardHeader className="pb-3">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Notifications</CardTitle>
+                  <CardDescription>Your recent activity</CardDescription>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowNotifications(false)}
+                >
+                  Close
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <NotificationsPanel />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Main Content */}
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-6"
         >
-          <CardHeader className="pb-3">
-            <CardTitle>Notifications</CardTitle>
-            <CardDescription>Your recent activity</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <NotificationsPanel />
-          </CardContent>
-        </Card>
-      )}
-
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="space-y-4"
-      >
-        <TabsList
-          className={`grid grid-cols-4 w-full max-w-md ${
-            theme === "dark" ? "bg-slate-800" : "bg-slate-100"
-          }`}
-        >
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="donations">Donations</TabsTrigger>
-          <TabsTrigger value="applicants">Applicants</TabsTrigger>
-          <TabsTrigger value="messages">Messages</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card
-              className={`${
-                theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"
-              } rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow`}
+          <TabsList
+            className={`grid grid-cols-4 w-full max-w-md mx-auto md:mx-0 shadow-sm ${
+              theme === "dark"
+                ? "bg-slate-800 border-slate-700"
+                : "bg-white border"
+            }`}
+          >
+            <TabsTrigger
+              value="overview"
+              className="transition-all data-[state=active]:shadow-sm"
             >
-              <div
-                className={`h-2 w-full ${
-                  theme === "dark"
-                    ? "bg-indigo-600"
-                    : "bg-gradient-to-r from-indigo-500 to-purple-500"
-                }`}
-              ></div>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Total Donations
-                </CardTitle>
-                <div
-                  className={`rounded-full p-2 ${
-                    theme === "dark"
-                      ? "bg-indigo-500/20 text-indigo-400"
-                      : "bg-indigo-100 text-indigo-600"
-                  }`}
-                >
-                  <Package className="h-4 w-4" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">24</div>
-                <p className="text-xs text-muted-foreground">
-                  +8 from last month
-                </p>
-              </CardContent>
-            </Card>
-            <Card
-              className={`${
-                theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"
-              } rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow`}
+              Overview
+            </TabsTrigger>
+            <TabsTrigger
+              value="donations"
+              className="transition-all data-[state=active]:shadow-sm"
             >
-              <div
-                className={`h-2 w-full ${
-                  theme === "dark"
-                    ? "bg-purple-600"
-                    : "bg-gradient-to-r from-purple-500 to-pink-500"
-                }`}
-              ></div>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Active Applicants
-                </CardTitle>
-                <div
-                  className={`rounded-full p-2 ${
-                    theme === "dark"
-                      ? "bg-purple-500/20 text-purple-400"
-                      : "bg-purple-100 text-purple-600"
-                  }`}
-                >
-                  <Users className="h-4 w-4" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">18</div>
-                <p className="text-xs text-muted-foreground">
-                  +5 new this week
-                </p>
-              </CardContent>
-            </Card>
-            <Card
-              className={`${
-                theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"
-              } rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow`}
+              Donations
+            </TabsTrigger>
+            <TabsTrigger
+              value="applicants"
+              className="transition-all data-[state=active]:shadow-sm"
             >
-              <div
-                className={`h-2 w-full ${
-                  theme === "dark"
-                    ? "bg-blue-600"
-                    : "bg-gradient-to-r from-blue-500 to-cyan-500"
-                }`}
-              ></div>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Unread Messages
-                </CardTitle>
-                <div
-                  className={`rounded-full p-2 ${
-                    theme === "dark"
-                      ? "bg-blue-500/20 text-blue-400"
-                      : "bg-blue-100 text-blue-600"
-                  }`}
-                >
-                  <MessageSquare className="h-4 w-4" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">7</div>
-                <p className="text-xs text-muted-foreground">
-                  3 new conversations
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+              Applicants
+            </TabsTrigger>
+            <TabsTrigger
+              value="messages"
+              className="transition-all data-[state=active]:shadow-sm"
+            >
+              Messages
+            </TabsTrigger>
+          </TabsList>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            {/* Stats Cards */}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <Card
+                className={`group hover:-translate-y-1 transition-all duration-300 ${
+                  theme === "dark"
+                    ? "bg-slate-800 border-slate-700"
+                    : "bg-white"
+                } rounded-xl overflow-hidden shadow-md hover:shadow-lg`}
+              >
+                <div
+                  className={`h-1 w-full group-hover:h-2 transition-all duration-300 ${
+                    theme === "dark"
+                      ? "bg-indigo-600"
+                      : "bg-gradient-to-r from-indigo-500 to-purple-500"
+                  }`}
+                ></div>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Total Donations
+                  </CardTitle>
+                  <div
+                    className={`rounded-full p-2 transition-all duration-300 ${
+                      theme === "dark"
+                        ? "bg-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500/30"
+                        : "bg-indigo-100 text-indigo-600 group-hover:bg-indigo-200"
+                    }`}
+                  >
+                    <Package className="h-4 w-4" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">24</div>
+                  <p className="text-xs text-muted-foreground">
+                    +8 from last month
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card
+                className={`group hover:-translate-y-1 transition-all duration-300 ${
+                  theme === "dark"
+                    ? "bg-slate-800 border-slate-700"
+                    : "bg-white"
+                } rounded-xl overflow-hidden shadow-md hover:shadow-lg`}
+              >
+                <div
+                  className={`h-1 w-full group-hover:h-2 transition-all duration-300 ${
+                    theme === "dark"
+                      ? "bg-purple-600"
+                      : "bg-gradient-to-r from-purple-500 to-pink-500"
+                  }`}
+                ></div>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Active Applicants
+                  </CardTitle>
+                  <div
+                    className={`rounded-full p-2 transition-all duration-300 ${
+                      theme === "dark"
+                        ? "bg-purple-500/20 text-purple-400 group-hover:bg-purple-500/30"
+                        : "bg-purple-100 text-purple-600 group-hover:bg-purple-200"
+                    }`}
+                  >
+                    <Users className="h-4 w-4" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">18</div>
+                  <p className="text-xs text-muted-foreground">
+                    +5 new this week
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card
+                className={`group hover:-translate-y-1 transition-all duration-300 ${
+                  theme === "dark"
+                    ? "bg-slate-800 border-slate-700"
+                    : "bg-white"
+                } rounded-xl overflow-hidden shadow-md hover:shadow-lg`}
+              >
+                <div
+                  className={`h-1 w-full group-hover:h-2 transition-all duration-300 ${
+                    theme === "dark"
+                      ? "bg-blue-600"
+                      : "bg-gradient-to-r from-blue-500 to-cyan-500"
+                  }`}
+                ></div>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Unread Messages
+                  </CardTitle>
+                  <div
+                    className={`rounded-full p-2 transition-all duration-300 ${
+                      theme === "dark"
+                        ? "bg-blue-500/20 text-blue-400 group-hover:bg-blue-500/30"
+                        : "bg-blue-100 text-blue-600 group-hover:bg-blue-200"
+                    }`}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">7</div>
+                  <p className="text-xs text-muted-foreground">
+                    3 new conversations
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Recent Donations (Full Width) */}
             <Card
-              className={`${
+              className={`group hover:shadow-lg transition-all duration-300 ${
                 theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"
-              } rounded-xl shadow-lg`}
+              } rounded-xl`}
             >
               <CardHeader>
-                <CardTitle>Recent Donations</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="h-5 w-5 text-indigo-500" />
+                  Recent Donations
+                </CardTitle>
                 <CardDescription>Latest donations received</CardDescription>
               </CardHeader>
               <CardContent>
-                <DonationsList limit={3} />
+                <DonationsList limit={5} />{" "}
+                {/* Increased limit to 5 since it has more space */}
               </CardContent>
             </Card>
+
+            {/* Recent Applicants (Now appears below Donations) */}
             <Card
-              className={`${
+              className={`group hover:shadow-lg transition-all duration-300 ${
                 theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"
-              } rounded-xl shadow-lg`}
+              } rounded-xl`}
             >
               <CardHeader>
-                <CardTitle>Recent Applicants</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-purple-500" />
+                  Recent Applicants
+                </CardTitle>
                 <CardDescription>People who need your help</CardDescription>
               </CardHeader>
               <CardContent>
                 <ApplicantsList limit={3} />
               </CardContent>
             </Card>
-          </div>
 
-          <Card
-            className={`${
-              theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"
-            } rounded-xl shadow-lg`}
-          >
-            <CardHeader>
-              <CardTitle>Current Needs</CardTitle>
-              <CardDescription>
-                Items your association currently needs
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <NeedsList />
-            </CardContent>
-          </Card>
+            {/* Needs List */}
+            <Card
+              className={`group hover:shadow-lg transition-all duration-300 ${
+                theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"
+              } rounded-xl`}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span
+                    className={`p-1 rounded-md ${
+                      theme === "dark"
+                        ? "bg-red-500/20 text-red-400"
+                        : "bg-red-100 text-red-600"
+                    }`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                      <line x1="12" y1="9" x2="12" y2="13"></line>
+                      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                  </span>
+                  Current Needs
+                </CardTitle>
+                <CardDescription>
+                  Items your association currently needs
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <NeedsList />
+              </CardContent>
+            </Card>
 
-          <Card
-            className={`${
-              theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"
-            } rounded-xl shadow-lg`}
-          >
-            <CardHeader>
-              <CardTitle>Association Profile</CardTitle>
-              <CardDescription>
-                Manage your association information
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AssociationProfile />
-            </CardContent>
-          </Card>
-        </TabsContent>
+            {/* Profile Section */}
+            <Card
+              className={`group hover:shadow-lg transition-all duration-300 ${
+                theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"
+              } rounded-xl`}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage
+                      src="/placeholder.svg?height=40&width=40"
+                      alt="Association"
+                    />
+                    <AvatarFallback className="bg-gradient-to-br from-indigo-400 to-purple-500 text-white text-xs">
+                      HH
+                    </AvatarFallback>
+                  </Avatar>
+                  Association Profile
+                </CardTitle>
+                <CardDescription>
+                  Manage your association information
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AssociationProfile />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="donations" className="space-y-4">
-          <Card
-            className={`${
-              theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"
-            } rounded-xl shadow-lg`}
-          >
-            <CardHeader>
-              <CardTitle>Donations</CardTitle>
-              <CardDescription>
-                All donations received by your association
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DonationsList />
-            </CardContent>
-          </Card>
-        </TabsContent>
+          {/* Donations Tab */}
+          <TabsContent value="donations" className="space-y-6">
+            <Card
+              className={`group hover:shadow-lg transition-all duration-300 ${
+                theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"
+              } rounded-xl`}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="h-5 w-5 text-indigo-500" />
+                  Donations
+                </CardTitle>
+                <CardDescription>
+                  All donations received by your association
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DonationsList />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="applicants" className="space-y-4">
-          <Card
-            className={`${
-              theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"
-            } rounded-xl shadow-lg`}
-          >
-            <CardHeader>
-              <CardTitle>Applicants</CardTitle>
-              <CardDescription>People who need your help</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ApplicantsList />
-            </CardContent>
-          </Card>
-        </TabsContent>
+          {/* Applicants Tab */}
+          <TabsContent value="applicants" className="space-y-6">
+            <Card
+              className={`group hover:shadow-lg transition-all duration-300 ${
+                theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"
+              } rounded-xl`}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-purple-500" />
+                  Applicants
+                </CardTitle>
+                <CardDescription>People who need your help</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ApplicantsList />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="messages" className="space-y-4">
-          <Card
-            className={`${
-              theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"
-            } rounded-xl shadow-lg`}
-          >
-            <CardHeader>
-              <CardTitle>Messages</CardTitle>
-              <CardDescription>Chat with applicants and donors</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChatSection />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          {/* Messages Tab */}
+          <TabsContent value="messages" className="space-y-6">
+            <Card
+              className={`group hover:shadow-lg transition-all duration-300 ${
+                theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"
+              } rounded-xl`}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-blue-500" />
+                  Messages
+                </CardTitle>
+                <CardDescription>
+                  Chat with applicants and donors
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChatSection />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }

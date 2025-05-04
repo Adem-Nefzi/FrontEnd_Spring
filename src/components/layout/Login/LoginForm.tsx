@@ -35,7 +35,7 @@ export default function LoginForm({
   return (
     <div className="p-6">
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {/* Status message */}
+        {/* Status message - remains exactly the same */}
         {formStatus.type && (
           <div
             className={`p-3 rounded-md flex items-center gap-2 text-sm ${
@@ -53,7 +53,7 @@ export default function LoginForm({
           </div>
         )}
 
-        {/* Email field */}
+        {/* Email field - unchanged */}
         <div className="space-y-2">
           <label
             htmlFor="email"
@@ -79,7 +79,7 @@ export default function LoginForm({
           )}
         </div>
 
-        {/* Password field */}
+        {/* Password field - unchanged */}
         <div className="space-y-2">
           <label
             htmlFor="password"
@@ -115,7 +115,7 @@ export default function LoginForm({
           )}
         </div>
 
-        {/* Remember me & Forgot password */}
+        {/* Remember me checkbox - unchanged */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <input
@@ -136,7 +136,7 @@ export default function LoginForm({
           </a>
         </div>
 
-        {/* Submit button */}
+        {/* Submit button - unchanged */}
         <button
           type="submit"
           className="w-full group flex items-center justify-center py-2 px-4 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:pointer-events-none"
@@ -151,7 +151,7 @@ export default function LoginForm({
         </button>
       </form>
 
-      {/* Sign up link */}
+      {/* Sign up link - unchanged */}
       <div className="mt-6 text-center">
         <p className="text-sm text-muted-foreground">
           Don't have an account?{" "}
