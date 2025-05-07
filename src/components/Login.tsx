@@ -16,7 +16,9 @@ const formSchema = z.object({
 export type FormValues = z.infer<typeof formSchema>;
 
 export default function LoginPage() {
-  const [userType, setUserType] = useState<"donor" | "recipient">("donor");
+  const [userType, setUserType] = useState<"donor" | "recipient" | "admin">(
+    "donor"
+  );
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formStatus, setFormStatus] = useState<{
@@ -76,7 +78,7 @@ export default function LoginPage() {
             throw userError; // Throw original error
           }
         }
-      } else {
+      } else if (userType === "recipient") {
         // Recipient login flow
         const { user, association } = await AuthService.login(
           values.email,
@@ -93,6 +95,17 @@ export default function LoginPage() {
         redirectPath = association
           ? "/association-dashboard"
           : "/recipient-dashboard";
+      } else if (userType === "admin") {
+        // Admin login flow
+        const { user } = await AuthService.login(values.email, values.password);
+
+        // Verify the user is actually an admin
+        if (user.userType !== "ADMIN") {
+          await AuthService.logout();
+          throw new Error("Please use admin credentials for admin access");
+        }
+
+        redirectPath = "/admin-dashboard";
       }
 
       setFormStatus({
