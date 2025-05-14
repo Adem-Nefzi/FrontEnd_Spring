@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { AuthService } from "@/api/auth";
 import SignUpPageUI from "@/components/layout/Signup/SignupPage";
+import { registerAssociation, registerUser } from "@/api/auth";
 
 // Form schema creator
 const createFormSchema = (
@@ -38,6 +38,8 @@ const createFormSchema = (
         lastName: z.string().min(2, "Last name must be at least 2 characters"),
         phone: z.string().optional(),
         address: z.string().optional(),
+        bio: z.string().optional(),
+        profilePicture: z.string().optional(),
       })
       .refine((data) => data.password === data.confirmPassword, {
         message: "Passwords don't match",
@@ -49,10 +51,12 @@ const createFormSchema = (
     return z
       .object({
         ...baseSchema,
-        organizationName: z.string().min(2, "Organization name is required"),
-        phone: z.string().min(1, "Phone number is required"),
-        address: z.string().min(1, "Address is required"),
+        associationName: z.string().min(2, "Organization name is required"),
+        associationPhone: z.string().min(1, "Phone number is required"),
+        associationAddress: z.string().min(1, "Address is required"),
         description: z.string().optional(),
+        category: z.string().optional(),
+        logoUrl: z.string().optional(),
       })
       .refine((data) => data.password === data.confirmPassword, {
         message: "Passwords don't match",
@@ -68,6 +72,8 @@ const createFormSchema = (
       lastName: z.string().min(2, "Last name must be at least 2 characters"),
       phone: z.string().optional(),
       address: z.string().optional(),
+      bio: z.string().optional(),
+      profilePicture: z.string().optional(),
     })
     .refine((data) => data.password === data.confirmPassword, {
       message: "Passwords don't match",
@@ -120,16 +126,20 @@ export default function SignUpPage() {
         lastName: "",
         phone: "",
         address: "",
+        bio: "",
+        profilePicture: "",
       };
     }
 
     if (userType === "donor" && donorType === "organization") {
       return {
         ...baseValues,
-        organizationName: "",
-        phone: "",
-        address: "",
+        associationName: "",
+        associationPhone: "",
+        associationAddress: "",
         description: "",
+        category: "",
+        logoUrl: "",
       };
     }
 
@@ -139,6 +149,8 @@ export default function SignUpPage() {
       lastName: "",
       phone: "",
       address: "",
+      bio: "",
+      profilePicture: "",
     };
   }
 
@@ -148,7 +160,6 @@ export default function SignUpPage() {
 
     try {
       if (userType === "donor" && donorType === "individual") {
-        // Type assertion for individual donor
         const individualValues = values as {
           firstName: string;
           lastName: string;
@@ -156,40 +167,45 @@ export default function SignUpPage() {
           password: string;
           phone?: string;
           address?: string;
+          bio?: string;
+          profilePicture?: string;
         };
 
-        await AuthService.registerUser({
+        await registerUser({
           firstName: individualValues.firstName,
           lastName: individualValues.lastName,
           email: individualValues.email,
-          password: individualValues.password,
+          passwordHash: individualValues.password,
           userType: "DONOR",
+          phone: individualValues.phone,
+          address: individualValues.address,
+          bio: individualValues.bio,
+          profilePicture: individualValues.profilePicture,
         });
       } else if (userType === "donor" && donorType === "organization") {
-        const orgValues = values as {
-          organizationName: string;
+        const organizationValues = values as {
+          associationName: string;
           email: string;
           password: string;
-          phone: string;
-          address: string;
+          associationPhone: string;
+          associationAddress: string;
           description?: string;
+          category?: string;
+          logoUrl?: string;
         };
 
-        await AuthService.registerAssociation({
-          firstName: "Organization", // Default value for organization
-          lastName: "Admin", // Default value for organization
-          email: orgValues.email,
-          password: orgValues.password,
-          userType: "DONOR",
-          associationName: orgValues.organizationName,
-          associationEmail: orgValues.email,
-          associationPhone: orgValues.phone,
-          associationAddress: orgValues.address,
-          description: orgValues.description,
-          category: "OTHER",
-          logoUrl: "", // Add empty string if not provided
+        await registerAssociation({
+          associationName: organizationValues.associationName,
+          associationEmail: organizationValues.email,
+          password: organizationValues.password,
+          associationPhone: organizationValues.associationPhone,
+          associationAddress: organizationValues.associationAddress,
+          description: organizationValues.description,
+          category: organizationValues.category || "OTHER",
+          logoUrl: organizationValues.logoUrl || "",
         });
       } else {
+        // Recipient case
         const recipientValues = values as {
           firstName: string;
           lastName: string;
@@ -197,16 +213,23 @@ export default function SignUpPage() {
           password: string;
           phone?: string;
           address?: string;
+          bio?: string;
+          profilePicture?: string;
         };
 
-        await AuthService.registerUser({
+        await registerUser({
           firstName: recipientValues.firstName,
           lastName: recipientValues.lastName,
           email: recipientValues.email,
-          password: recipientValues.password,
+          passwordHash: recipientValues.password,
           userType: "RECIPIENT",
+          phone: recipientValues.phone,
+          address: recipientValues.address,
+          bio: recipientValues.bio,
+          profilePicture: recipientValues.profilePicture,
         });
       }
+
       setFormStatus({
         type: "success",
         message: "Account created! Redirecting to login...",
@@ -219,14 +242,13 @@ export default function SignUpPage() {
           : typeof error === "object" &&
             error !== null &&
             "response" in error &&
-            error.response &&
             typeof error.response === "object" &&
+            error.response !== null &&
             "data" in error.response &&
-            error.response.data &&
             typeof error.response.data === "object" &&
-            "message" in error.response.data &&
-            typeof error.response.data.message === "string"
-          ? error.response.data.message
+            error.response.data !== null &&
+            "message" in error.response.data
+          ? String(error.response.data.message)
           : "Registration failed. Please try again.";
 
       setFormStatus({
@@ -239,7 +261,11 @@ export default function SignUpPage() {
   }
 
   const handleMapSelection = (address: string) => {
-    form.setValue("address", address);
+    if (userType === "donor" && donorType === "organization") {
+      form.setValue("associationAddress", address);
+    } else {
+      form.setValue("address", address);
+    }
     setShowMap(false);
   };
 

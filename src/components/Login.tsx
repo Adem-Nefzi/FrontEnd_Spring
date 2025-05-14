@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { AuthService } from "@/api/auth";
+import { login, logout } from "@/api/auth";
 import LoginPageUI from "@/components/layout/Login/LoginPage";
 
 const formSchema = z.object({
@@ -41,71 +41,46 @@ export default function LoginPage() {
 
     try {
       let redirectPath = "/dashboard";
+      let loginUserType: "user" | "association" | undefined;
 
-      if (userType === "donor") {
-        // First try donor login
-        try {
-          const { user } = await AuthService.login(
-            values.email,
-            values.password
-          );
-
-          // Verify the user is actually a donor
-          if (user.userType !== "DONOR") {
-            await AuthService.logout();
-            throw new Error(
-              "Please use recipient login for recipient accounts"
-            );
-          }
-
-          redirectPath = "/donor-dashboard";
-        } catch (userError) {
-          // If donor login fails, try as association
-          try {
-            const { user, association } = await AuthService.login(
-              values.email,
-              values.password
-            );
-
-            // Verify it's actually an association
-            if (user.userType !== "RECIPIENT" || !association) {
-              await AuthService.logout();
-              throw new Error("Invalid account type");
-            }
-
-            redirectPath = "/association-dashboard";
-          } catch {
-            throw userError; // Throw original error
-          }
-        }
-      } else if (userType === "recipient") {
-        // Recipient login flow
-        const { user, association } = await AuthService.login(
-          values.email,
-          values.password
-        );
-
-        // Verify the user is actually a recipient
-        if (user.userType !== "RECIPIENT") {
-          await AuthService.logout();
-          throw new Error("Please use donor login for donor accounts");
-        }
-
-        // Determine if this is a regular recipient or association
-        redirectPath = association
-          ? "/association-dashboard"
-          : "/recipient-dashboard";
+      // Set the appropriate userType for the API call based on the selected user type
+      if (userType === "recipient") {
+        loginUserType = "user"; // Recipients are users in the backend
+      } else if (userType === "donor") {
+        loginUserType = "user"; // Donors are users in the backend
       } else if (userType === "admin") {
-        // Admin login flow
-        const { user } = await AuthService.login(values.email, values.password);
+        loginUserType = "user"; // Admins are users in the backend
+      }
 
-        // Verify the user is actually an admin
-        if (user.userType !== "ADMIN") {
-          await AuthService.logout();
+      // Attempt login with the appropriate user type
+      const response = await login({
+        email: values.email,
+        password: values.password,
+        userType: loginUserType,
+      });
+
+      // Verify user type matches the selected login type
+      if (userType === "donor") {
+        if (response.user?.userType !== "DONOR") {
+          await logout();
+          throw new Error("Please use the correct login type for your account");
+        }
+        redirectPath = "/donor-dashboard";
+      } else if (userType === "recipient") {
+        if (response.user?.userType !== "RECIPIENT") {
+          await logout();
+          throw new Error("Please use the correct login type for your account");
+        }
+        redirectPath = "/recipient-dashboard";
+      } else if (userType === "admin") {
+        if (response.user?.userType !== "ADMIN") {
+          await logout();
           throw new Error("Please use admin credentials for admin access");
         }
-
         redirectPath = "/admin-dashboard";
+      } else if (response.association) {
+        // Handle association login
+        redirectPath = "/association-dashboard";
       }
 
       setFormStatus({

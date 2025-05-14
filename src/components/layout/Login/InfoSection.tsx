@@ -1,4 +1,3 @@
-"use client";
 import { Heart, Users, LogIn, Shield } from "lucide-react";
 
 interface InfoSectionProps {

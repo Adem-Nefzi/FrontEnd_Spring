@@ -1,39 +1,27 @@
-// src/api/auth.ts
 import api from "./client";
 
-export interface User {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  userType: "DONOR" | "RECIPIENT" | "ADMIN";
-  profilePicture?: string;
-  // Add other fields from your Spring User model
-}
-
-export interface Association {
-  id: number;
-  name: string;
-  description?: string;
-  // Add other fields from your Spring Association model
-}
-
-export interface LoginResponse {
-  user: User;
-  association?: Association; // Only present for association logins
-}
-
-export interface RegisterUserPayload {
-  firstName: string;
-  lastName: string;
+interface LoginData {
   email: string;
   password: string;
-  userType: "DONOR" | "RECIPIENT";
+  userType?: "user" | "association";
 }
 
-export interface RegisterAssociationPayload extends RegisterUserPayload {
+interface UserRegisterData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  passwordHash: string;
+  userType: "DONOR" | "RECIPIENT";
+  phone?: string;
+  address?: string;
+  bio?: string;
+  profilePicture?: string;
+}
+
+interface AssociationRegisterData {
   associationName: string;
   associationEmail: string;
+  password: string;
   associationPhone?: string;
   associationAddress?: string;
   description?: string;
@@ -41,54 +29,136 @@ export interface RegisterAssociationPayload extends RegisterUserPayload {
   logoUrl?: string;
 }
 
-// Auth functions
-export const AuthService = {
-  async login(email: string, password: string): Promise<LoginResponse> {
-    const response = await api.post("/auth/login", { email, password });
-    return response.data;
-  },
+interface AuthResponse {
+  user?: User;
+  association?: Association;
+  message?: string;
+}
 
-  async registerUser(userData: RegisterUserPayload): Promise<User> {
-    const response = await api.post("/auth/register/user", {
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      email: userData.email,
-      passwordHash: userData.password, // Spring will hash this
-      userType: userData.userType,
-    });
-    return response.data;
-  },
+interface User {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  userType: "DONOR" | "RECIPIENT" | "ADMIN";
+  phone?: string;
+  address?: string;
+  bio?: string;
+  profilePicture?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
-  async registerAssociation(
-    associationData: RegisterAssociationPayload
-  ): Promise<{ user: User; association: Association }> {
-    const response = await api.post("/auth/register/association", {
-      firstName: associationData.firstName,
-      lastName: associationData.lastName,
-      email: associationData.email,
-      password: associationData.password,
-      associationName: associationData.associationName,
-      associationEmail: associationData.associationEmail,
-      associationPhone: associationData.associationPhone,
-      associationAddress: associationData.associationAddress,
-      description: associationData.description,
-      category: associationData.category,
-      logoUrl: associationData.logoUrl,
-    });
-    return response.data;
-  },
+interface Association {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  description?: string;
+  category?: string;
+  logoUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
-  async logout(): Promise<void> {
-    await api.post("/auth/logout");
-  },
+// User Login
+export const login = async (data: LoginData): Promise<AuthResponse> => {
+  const response = await api.post("/auth/login", {
+    email: data.email,
+    password: data.password,
+  });
+  return response.data; // Properly propagate the error to be handled by the caller
+};
 
-  async getCurrentUser(): Promise<User> {
+// User Registration
+export const registerUser = async (data: UserRegisterData): Promise<User> => {
+  const response = await api.post("/auth/register/user", {
+    firstName: data.firstName,
+    lastName: data.lastName,
+    email: data.email,
+    passwordHash: data.passwordHash,
+    userType: data.userType,
+    phone: data.phone,
+    address: data.address,
+    bio: data.bio,
+    profilePicture: data.profilePicture,
+  });
+  return response.data;
+};
+
+// Association Registration
+export const registerAssociation = async (
+  data: AssociationRegisterData
+): Promise<Association> => {
+  const response = await api.post("/auth/register/association", {
+    associationName: data.associationName,
+    associationEmail: data.associationEmail,
+    password: data.password,
+    associationPhone: data.associationPhone,
+    associationAddress: data.associationAddress,
+    description: data.description,
+    category: data.category,
+    logoUrl: data.logoUrl,
+  });
+  return response.data;
+};
+
+// Association Login
+export const associationLogin = async (
+  data: LoginData
+): Promise<AuthResponse> => {
+  const response = await api.post("/auth/login", {
+    email: data.email,
+    password: data.password,
+    userType: "association",
+  });
+  return response.data;
+};
+
+// Logout
+export const logout = async (): Promise<void> => {
+  await api.post("/auth/logout");
+};
+
+// Admin Login (uses same login endpoint with ADMIN userType)
+export const adminLogin = async (data: LoginData): Promise<AuthResponse> => {
+  const response = await api.post("/auth/login", {
+    email: data.email,
+    password: data.password,
+  });
+  return response.data;
+};
+
+// Get current user session
+export const getCurrentUser = async (): Promise<User | null> => {
+  try {
     const response = await api.get("/users/profile");
     return response.data;
-  },
+  } catch {
+    return null;
+  }
+};
 
-  // Helper to check if user is association
-  isAssociation(user: User, association?: Association): boolean {
-    return user.userType === "RECIPIENT" && !!association;
-  },
+// Get current association session
+export const getCurrentAssociation = async (): Promise<Association | null> => {
+  try {
+    const response = await api.get("/associations/profile");
+    return response.data;
+  } catch {
+    return null;
+  }
+};
+
+// Check if user is admin
+export const isAdmin = (user: User | null): boolean => {
+  return user?.userType === "ADMIN";
+};
+
+// Check if user is association
+export const isAssociation = (
+  user: User | null,
+  association?: Association | null
+): boolean => {
+  return user?.userType === "RECIPIENT" && !!association;
 };
